@@ -1,117 +1,145 @@
 
 import React from 'react';
 import Message from './Message.jsx';
-import '../styles/style.css';
 import TextField from '@material-ui/core/TextField';
-import Fab from '@material-ui/core/Fab';
 import SendIcon from '@material-ui/icons/Send';
-
+import Fab from '@material-ui/core/Fab';
+import '../styles/style.css';
+import PropTypes from 'prop-types';
 
 export default class MessageField extends React.Component {
-   state = {
-       messages: [
-           {
-               text:"Привет!", 
-               sender: 'robot'
-            }, 
-           {
-               text:"Как дела?", 
-               sender: 'robot'
-            }
-        ],
+    static propTypes = {
+        chatId: PropTypes.string
+    };
+
+    state = {
+        messages: {
+            '1': [
+                {
+                    text: 'Привет!',
+                    sender: 'bot'
+                },
+                {
+                    text: 'Как дела?',
+                    sender: 'bot'
+                },
+            ],
+            '2': [
+                {
+                    text: 'Это чат 2!',
+                    sender: 'bot'
+                }
+            ],
+            '3': [
+                {
+                    text: 'Это чат 3!',
+                    sender: 'bot'
+                }
+            ]
+        },
         input: ''
-   };
+    };
 
-   constructor(props) {
-       super(props);
+    constructor(props) {
+        super(props);
 
-       this.messageFieldRef = React.createRef(); //для скролла
-   }
-
-   componentDidUpdate(prevProps, prevState) {
-       
-        if  (
-            prevState.messages.length !== this.state.messages.length &&
-            this.state.messages[this.state.messages.length-1].sender !== 'robot') {    
-    
-        setTimeout( () =>
-    this.setState( (state) => ({
-        messages: [
-             ...state.messages, 
-             {
-                 text:'Не приставай ко мне, я робот!', 
-                 sender: 'robot'
-             }  
-            ] 
-        })), 1000);
+        this.messageFieldRef = React.createRef();
     }
 
-    this.messageFieldRef.current.scrollTop = 
-        this.messageFieldRef.current.scrollHeight - this.messageFieldRef.current.clientHeight;
-}
+    componentDidUpdate(prevProps, prevState) {
+        const { chatId } = this.props;
 
+        if (
+            prevState.messages[chatId].length < this.state.messages[chatId].length &&
+            this.state.messages[chatId][this.state.messages[chatId].length - 1].sender !== 'bot'
+        ) {
+            setTimeout(() =>
+                this.setState((state) => ({
+                    messages: {
+                        ...state.messages,
+                        [chatId]: [
+                            ...state.messages[chatId],
+                            {
+                                text: `Не приставай ко мне, я робот из чата ${chatId}!`,
+                                sender: 'bot'
+                            }
+                        ]
+                    }
+                })), 1000);
+        }
 
-   sendMessage = () => {
-       this.setState ((state) => ({ 
-           messages: [ 
-               ...state.messages, 
-               {
-                   text:state.input,  
-                   sender: 'me'
-                }            
-            ],
-            input:'' //очистка сообщения после ввода
-        }));    
-        
-       
-   };
+        this.messageFieldRef.current.scrollTop =
+            this.messageFieldRef.current.scrollHeight - this.messageFieldRef.current.clientHeight;
+    }
 
-   handleClick = () => {
-        this.sendMessage();
-   };
+    sendMessage = () => {
+        const chatId = this.props.chatId;
 
-   handleChangeInput = (event) => {
-       this.setState({
-            input: event.target.value
-       })
-   };
+        this.setState((state) => ({
+            messages: {
+                ...state.messages,
+                [chatId]: [
+                    ...state.messages[chatId],
+                    {
+                        text: state.input,
+                        sender: 'me'
+                    }
+                ]
+            },
+            input: ''
+        }));
+    };
 
-   handleInputKeyUp = (event) => {
-       if (event.keyCode === 13) { // 13 соотв клавише enter
-           this.sendMessage();
-       }
-   };
+    handleChangeInput = ({ target: { value } }) => {
+        this.setState({
+            input: value /*event.target.value*/
+        })
+    };
 
-   render() {
-    const messageElements = this.state.messages.map(({text, sender}, index) => (
-        <Message
-            key={index}
-            text={text}
-            sender={sender}/>)
-    );
+    handleInputKeyUp = (event) => {
+        if (event.keyCode === 13) {
+            this.sendMessage();
+        }
+    };
 
-    return (
-        <div className="layout">
-            <div ref={this.messageFieldRef} className="message-field">
-                { messageElements }
+    render() {
+        const { chatId } = this.props;
+
+        if (!chatId) {
+            return <div className='empty-chat'>Выберите чат</div>;
+        }
+
+        const messageElements = this.state.messages[chatId].map(({text, sender}, index) => (
+            <Message
+                key={index}
+                text={text}
+                sender={sender}/>)
+        );
+
+        return (
+            <div className="message-field-wrapper">
+                <div ref={this.messageFieldRef} className="message-field">
+                    { messageElements }
+                </div>
+                <div className='actions'>
+                    <TextField
+                        style={{ marginRight: '12px' }}
+                        placeholder='Введите сообщение'
+                        fullWidth
+                        value={this.state.input}
+                        type="text"
+                        autoFocus
+                        onKeyUp={this.handleInputKeyUp}
+                        onChange={this.handleChangeInput} />
+                    <Fab
+                        color='primary'
+                        disabled={this.state.input === ''}
+                        onClick={this.sendMessage}>
+                        <SendIcon />
+                    </Fab>
+                </div>
             </div>
-            <div className='actions'>
-                <TextField
-                    placeholder='Введите сообщение'
-                    fullWidth //булевые props можно не писать = true
-                    value={this.state.input}
-                    type="text"
-                    autoFocus // на инпут автофокус по умолчанию
-                    onKeyUp={this.handleInputKeyUp} // ловим событие нажатия на enter
-                    onChange={this.handleChangeInput} />
-                <Fab
-                    disabled={this.state.input === ''} //кнопка неактивна, пока инпут пустой                    
-                    onClick={this.sendMessage}>
-                    <SendIcon />
-                </Fab>
-            </div>
-        </div>
-    )
-}
+        )
+    }
 }
 

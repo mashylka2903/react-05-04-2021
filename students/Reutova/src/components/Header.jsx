@@ -1,11 +1,16 @@
 import React from 'react';
-
+import PropTypes from 'prop-types';
+import '../styles/style.css';
 
 export default class Header extends React.Component {
+    static propTypes = {
+        chatId: PropTypes.string
+    };
+
     render() {
         return (
             <div className="header">
-             <h2>Это чат с роботом</h2>  
+                Чат {this.props.chatId || 'не выбран'}
             </div>
         );
     }

@@ -1,22 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
-import ChatList from './ChatList.jsx';
+import Container from '@material-ui/core/Container';
 import Header from './Header.jsx';
 import MessageField from './MessageField.jsx';
+import ChatList from './ChatList.jsx';
 
 export default class Layout extends React.Component {
+    static propTypes = {
+        chatId: PropTypes.string
+    };
+
     render() {
+        const { chatId } = this.props;
+
         return (
-            <div className="layout-main">
-                <Header/>
-                <div className="chatarea">                    
-                    <ChatList/>
-                    <MessageField/>
+            <Container className="layout-main">
+                <Header chatId={chatId} />
+                <div className="chatarea">
+                    <ChatList chatId={chatId} />
+                    <MessageField chatId={chatId} />
                 </div>
-            </div>
-        )
+            </Container>
+        );
     }
 }
 
-//<ChatList/>
